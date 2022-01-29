@@ -6,6 +6,11 @@
 #include "mini_http.h"
 
 enum{
+    MINI_HTTP_FAIL = -1,
+    MINI_HTTP_OK
+};
+
+enum{
     FIRST_LINE,
     HOST,
     CONTENT_TYPE,
@@ -41,7 +46,7 @@ const char *HTTPVerStr[] = {
 */
 int32_t mini_http_print_req(HTTPReq *req){
     if(req == NULL)
-        return -1;
+        return MINI_HTTP_FAIL;
     printf("%s %s %s\n", HTTPReqStr[req->type], req->target, HTTPVerStr[req->version]);
     
     if(strlen(req->content_type) != 0)
@@ -55,7 +60,7 @@ int32_t mini_http_print_req(HTTPReq *req){
     if(strlen(req->apikey) != 0)
         printf("ApiKey: %s\n", req->apikey);
     
-    return 0;
+    return MINI_HTTP_OK;
 }
 #endif // NO_PRINT_FUNC
 /**
@@ -67,7 +72,7 @@ int32_t mini_http_print_req(HTTPReq *req){
 */
 int32_t mini_http_gen_str(HTTPReq *req, char *buff, int32_t buff_size){
     if(buff == NULL || buff_size <= 0)
-        return -1;
+        return MINI_HTTP_FAIL;
     
     char tmp_buff[128] = {0};
     
@@ -115,10 +120,10 @@ int32_t mini_http_gen_str(HTTPReq *req, char *buff, int32_t buff_size){
         offset += elem_size;
         
         if(offset >= (size_t)buff_size)
-            return -1;
+            return MINI_HTTP_FAIL;
     }
 
-    return 0;
+    return MINI_HTTP_OK;
 }
 
 /**
