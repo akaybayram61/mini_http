@@ -1,15 +1,15 @@
 CC=gcc
 CFLAGS=-Wall -Wextra --std=c99 -g -I./inc
 SRCS=$(wildcard src/*.c)
-OBJS=$(patsubst %.o, %.c, $(SRCS))
+OBJS=$(patsubst %.c, %.o, $(SRCS))
 
 all: main
 
 %.o: %.c
-	$(CC) -o $@ $<
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 main: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) $^ $(CFLAGS) -o $@
 	
 clean:
 	rm -rf src/*.o main
