@@ -43,9 +43,17 @@ int32_t mini_http_print_req(HTTPReq *req){
     if(req == NULL)
         return -1;
     printf("%s %s %s\n", HTTPReqStr[req->type], req->target, HTTPVerStr[req->version]);
-    printf("Content-Type: %s\n", req->content_type);
-    printf("Host: %s\n", req->host);
+    
+    if(strlen(req->content_type) != 0)
+        printf("Content-Type: %s\n", req->content_type);
+    
+    if(strlen(req->host) != 0)
+        printf("Host: %s\n", req->host);
+
     printf("Content-Length: %d\n", req->content_length);
+    
+    if(strlen(req->apikey) != 0)
+        printf("ApiKey: %s\n", req->apikey);
     
     return 0;
 }
@@ -92,6 +100,13 @@ int32_t mini_http_gen_str(HTTPReq *req, char *buff, int32_t buff_size){
                     break;
                 sprintf(tmp_buff, http_header_temp[CONTENT_TYPE],
                 req->content_type);
+                break;
+            
+            case APIKEY:
+                if(req->apikey == NULL)
+                    break; 
+                sprintf(tmp_buff, http_header_temp[APIKEY],
+                req->apikey);
                 break;
         }
         elem_size = strlen(tmp_buff);

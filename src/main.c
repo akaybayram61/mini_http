@@ -41,7 +41,7 @@ Accept-Language: en-US,en;q=0.9\
 fname=bayram&lname=akay";
 
 int main(){
-    char str[128] = {0};
+    char str[256] = {0};
     char *end_ptr;
     HTTPReq req = mini_http_parse_req(http_header, &end_ptr);
     printf("[ HTTP header ]\n");
