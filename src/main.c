@@ -55,6 +55,18 @@ int main(){
         printf("%s\n", str);
     else
         printf("Error\n");
+    
+    HTTPResp resp = {
+        .status_code = 200,
+        .version = HTTP_VER_1_1,
+        .host = "server.host.com",
+        .content_type = "text/html",
+        .content_length = 120,
+        .connection = false,
+    };
+    mini_http_gen_resp_str(&resp, str, sizeof(str));
+    printf("[ HTTP response ]\n");
+    printf("%s\n", str);
 
     return 0;
 }

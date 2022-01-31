@@ -14,6 +14,7 @@
 typedef enum{
     HTTP_REQ_GET,
     HTTP_REQ_POST,
+    HTTP_REQ_SIZE,
 }HTTPReqType;
 
 typedef enum{
@@ -21,11 +22,13 @@ typedef enum{
     HTTP_OK = 200,
     HTTP_BAD_REQUEST = 400,
     HTTP_NOT_FOUND = 404,
+    HTTP_RESP_CODE_SIZE = 4, // Update this while adding new value
 }HTTPRespCode;
 
 typedef enum{
     HTTP_VER_1_0,
     HTTP_VER_1_1,
+    HTTP_VER_SIZE,
 }HTTPVersion;
 
 typedef struct HTTPResp{

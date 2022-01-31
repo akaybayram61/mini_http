@@ -6,7 +6,6 @@
 #include "cassert.h"
 #include "strutil.h"
 #include "mini_http.h"
-#define _GNU_SOURCE
 
 enum{
     MINI_HTTP_BAD_ARG = -2,
@@ -14,7 +13,7 @@ enum{
     MINI_HTTP_OK
 };
 
-typedef enum{
+enum{
     REQ_FIRST_LINE,
     RESP_FIRST_LINE,
     HOST,
@@ -23,7 +22,7 @@ typedef enum{
     APIKEY,
     CONNECTION,
     HTTP_HEADER_VALUE_SIZE
-}str_num;
+};
 cassert(sizeof(HTTPReq) == 176);
 
 static char *http_header_temp[] = {
@@ -35,17 +34,20 @@ static char *http_header_temp[] = {
     [APIKEY] = "ApiKey: %s\r\n", 
     [CONNECTION] = "Connection: %s\r\n",
 };
+cassert(HTTP_HEADER_VALUE_SIZE == 7);
 cassert(sizeof(HTTPReq) == 176);
 
 const char *HTTPReqStr[] = {
     [HTTP_REQ_GET] = "GET",
     [HTTP_REQ_POST] = "POST",
 };
+cassert(HTTP_REQ_SIZE == 2);
 
 const char *HTTPVerStr[] = {
     [HTTP_VER_1_0] = "HTTP/1.0",
     [HTTP_VER_1_1] = "HTTP/1.1",
 };
+cassert(HTTP_VER_SIZE == 2);
 
 #ifndef NO_PRINT_FUNC
 /**
@@ -73,6 +75,7 @@ int32_t mini_http_print_req(HTTPReq *req){
     
     printf("Connection: %s\n", req->connection ? "keep-alive": "close");
     
+    cassert(sizeof(HTTPReq) == 176);
     return MINI_HTTP_OK;
 }
 #endif // NO_PRINT_FUNC
@@ -243,6 +246,7 @@ int32_t mini_http_get_status_msg(HTTPRespCode code, char *buff){
             msg = "Unknown Response";
             res = MINI_HTTP_FAIL;
             break;
+        cassert(HTTP_RESP_CODE_SIZE == 4);
     }
     strncpy(buff, msg, STATUS_MSG_SIZE); 
     return res;    
@@ -268,8 +272,9 @@ int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size){
         memset(tmp_buff, 0, strlen(tmp_buff));
         switch(i){
             case RESP_FIRST_LINE:
+                mini_http_get_status_msg(resp->status_code, resp->status_msg);
                 sprintf(tmp_buff, http_header_temp[RESP_FIRST_LINE], 
-                    HTTPReqStr[resp->version], 
+                    HTTPVerStr[resp->version], 
                     resp->status_code, 
                     resp->status_msg);
                 break;
