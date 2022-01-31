@@ -41,6 +41,7 @@ Accept-Language: en-US,en;q=0.9\
 fname=bayram&lname=akay";
 
 int main(){
+    printf("HTTPReq %ld\n", sizeof(HTTPReq));
     char str[256] = {0};
     char *end_ptr;
     HTTPReq req = mini_http_parse_req(http_header, &end_ptr);
@@ -48,7 +49,7 @@ int main(){
     mini_http_print_req(&req);
     printf("[ HTTP body ]\n");
     printf("%s\n", end_ptr);  
-    int status = mini_http_gen_str(&req, str, sizeof str);
+    int status = mini_http_gen_req_str(&req, str, sizeof str);
     if(status == 0)
         printf("%s\n", str);
     else
