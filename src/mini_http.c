@@ -4,7 +4,9 @@
 #include <stdio.h>
 #endif // NO_PRINT_FUNC
 #include "cassert.h"
+#include "strutil.h"
 #include "mini_http.h"
+#define _GNU_SOURCE
 
 enum{
     MINI_HTTP_BAD_ARG = -2,
@@ -12,19 +14,21 @@ enum{
     MINI_HTTP_OK
 };
 
-enum{
-    FIRST_LINE,
+typedef enum{
+    REQ_FIRST_LINE,
+    RESP_FIRST_LINE,
     HOST,
     CONTENT_TYPE,
     CONTENT_LENGTH,
     APIKEY,
     CONNECTION,
     HTTP_HEADER_VALUE_SIZE
-};
+}str_num;
 cassert(sizeof(HTTPReq) == 176);
 
 static char *http_header_temp[] = {
-    [FIRST_LINE] = "%s %s %s\r\n",
+    [REQ_FIRST_LINE] = "%s %s %s\r\n",
+    [RESP_FIRST_LINE] = "%s %d %s\r\n", 
     [HOST] = "Host: %s\r\n",
     [CONTENT_TYPE] = "Content-Type: %s\r\n",
     [CONTENT_LENGTH] = "Content-Length: %d\r\n",
@@ -90,8 +94,8 @@ int32_t mini_http_gen_req_str(HTTPReq *req, char *buff, int32_t buff_size){
     for(size_t i = 0; i < HTTP_HEADER_VALUE_SIZE; ++i){
         memset(tmp_buff, 0, strlen(tmp_buff));
         switch(i){
-            case FIRST_LINE:
-                sprintf(tmp_buff, http_header_temp[FIRST_LINE], 
+            case REQ_FIRST_LINE:
+                sprintf(tmp_buff, http_header_temp[REQ_FIRST_LINE], 
                     HTTPReqStr[req->type], 
                     req->target, 
                     HTTPVerStr[req->version]);
@@ -151,18 +155,18 @@ HTTPReq mini_http_parse_req(char *http_req, char **end_ptr){
     char *line = strtok(http_req, "\r\n");
     
     // Parse first line
-    if(strstr(line, "POST") != NULL)
+    if(strcasestr(line, "POST") != NULL)
         res.type = HTTP_REQ_POST;
     else
         res.type = HTTP_REQ_GET;
     
-    if(strstr(line, "HTTP/1.0") != NULL)
+    if(strcasestr(line, "HTTP/1.0") != NULL)
         res.version = HTTP_VER_1_0;
     else
         res.version = HTTP_VER_1_1;
 
     char *n;
-    if((n = strstr(line, "/")) != NULL){
+    if((n = strcasestr(line, "/")) != NULL){
         int32_t count = 0;
         while(*n != ' '){
             res.target[count++] = *n++;
@@ -174,32 +178,32 @@ HTTPReq mini_http_parse_req(char *http_req, char **end_ptr){
         *end_ptr = line;    
 
         const char *host = "Host: ";
-        if(strstr(line, host) != NULL){
+        if(strcasestr(line, host) != NULL){
             strcpy(res.host, line + strlen(host));
             continue;
         }
 
         const char *content_type = "Content-Type: ";
-        if(strstr(line, content_type) != NULL){
+        if(strcasestr(line, content_type) != NULL){
             strcpy(res.content_type, line + strlen(content_type));
             continue;
         }
         
         const char *content_length = "Content-Length: ";
-        if(strstr(line, content_length) != NULL){
+        if(strcasestr(line, content_length) != NULL){
            res.content_length = atoi(line + strlen(content_length));
            continue;
         }
         
         const char *apikey = "ApiKey: ";
-        if(strstr(line, apikey) != NULL){
+        if(strcasestr(line, apikey) != NULL){
            strcpy(res.apikey, line + strlen(apikey));
            continue;
         }
 
         const char *connection = "Connection: ";
-        if(strstr(line, connection) != NULL){
-            if(strstr(line, "keep-alive"))
+        if(strcasestr(line, connection) != NULL){
+            if(strcasestr(line, "keep-alive"))
                 res.connection = true;
             else
                 res.connection = false;
@@ -239,20 +243,70 @@ int32_t mini_http_get_status_msg(HTTPRespCode code, char *buff){
             msg = "Unknown Response";
             res = MINI_HTTP_FAIL;
             break;
-        cassert(sizeof(HTTPRespCode) == 4);  
     }
     strncpy(buff, msg, STATUS_MSG_SIZE); 
     return res;    
 }
 
 int32_t mini_http_print_resp(HTTPResp *resp){
-    cassert(false);
+    //cassert(false);
 }
 
 HTTPResp mini_http_parse_resp(char *http_resp, char **end_ptr){
-    cassert(false);
+    //cassert(false);
 }
 
 int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size){
-    cassert(false);
+    if(buff == NULL || buff_size <= 0)
+        return MINI_HTTP_FAIL;
+    
+    char tmp_buff[128] = {0};
+    
+    size_t offset = 0;
+    size_t elem_size = 0;
+    for(size_t i = 0; i < HTTP_HEADER_VALUE_SIZE; ++i){
+        memset(tmp_buff, 0, strlen(tmp_buff));
+        switch(i){
+            case RESP_FIRST_LINE:
+                sprintf(tmp_buff, http_header_temp[RESP_FIRST_LINE], 
+                    HTTPReqStr[resp->version], 
+                    resp->status_code, 
+                    resp->status_msg);
+                break;
+                
+            case HOST:
+                if(resp->host == NULL)
+                    break;
+                sprintf(tmp_buff, http_header_temp[HOST],
+                resp->host);
+                break;
+                
+            case CONTENT_LENGTH:
+                sprintf(tmp_buff, http_header_temp[CONTENT_LENGTH],
+                resp->content_length);
+                break;
+            
+            case CONTENT_TYPE:
+                if(resp->content_type == NULL)
+                    break;
+                sprintf(tmp_buff, http_header_temp[CONTENT_TYPE],
+                resp->content_type);
+                break;
+            
+            case CONNECTION:
+                sprintf(tmp_buff, resp->connection ? "Connection: keep-alive": "Connection: close");
+                break;
+
+            cassert(sizeof(HTTPResp) == 144);
+        }
+        elem_size = strlen(tmp_buff);
+        tmp_buff[elem_size] = 0;
+        strcpy(buff + offset, tmp_buff);
+        offset += elem_size;
+        
+        if(offset >= (size_t)buff_size)
+            return MINI_HTTP_FAIL;
+    }
+
+    return MINI_HTTP_OK;
 }

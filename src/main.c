@@ -42,6 +42,7 @@ fname=bayram&lname=akay";
 
 int main(){
     printf("HTTPReq %ld\n", sizeof(HTTPReq));
+    printf("HTTPResp %ld\n", sizeof(HTTPResp));
     char str[256] = {0};
     char *end_ptr;
     HTTPReq req = mini_http_parse_req(http_header, &end_ptr);
