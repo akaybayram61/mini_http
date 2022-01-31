@@ -162,11 +162,13 @@ HTTPReq mini_http_parse_req(char *http_req, char **end_ptr){
         res.type = HTTP_REQ_POST;
     else
         res.type = HTTP_REQ_GET;
+    cassert(HTTP_REQ_SIZE == 2);
     
     if(strcasestr(line, "HTTP/1.0") != NULL)
         res.version = HTTP_VER_1_0;
     else
         res.version = HTTP_VER_1_1;
+    cassert(HTTP_VER_SIZE == 2);
 
     char *n;
     if((n = strcasestr(line, "/")) != NULL){
