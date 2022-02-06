@@ -19,7 +19,6 @@ ApiKey: s2easd4rasd\r\n\
 <?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n\
 <string xmlns=\"http://clearforest.com/\">string</string>\r\n\r\n";
 
-
 char http_form_header[] = "POST / HTTP/1.1\r\n\
 Host: 127.0.0.1\r\n\
 Connection: keep-alive\r\n\
@@ -39,6 +38,14 @@ Accept-Encoding: gzip, deflate, br\r\n\
 Accept-Language: en-US,en;q=0.9\
 \r\n\r\n\
 fname=bayram&lname=akay";
+
+char http_resp[] = "HTTP/1.1 200 OK\r\n\
+Date: Tue, 27 Jul 2009 12:28:53 GMT\r\n\
+Server: Apache/2.2.14 (Win32)\r\n\
+Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\r\n\
+Content-Length: 88\r\n\
+Content-Type: text/html\r\n\
+Connection: Closed\r\n\r\n";
 
 int main(){
     printf("HTTPReq %ld\n", sizeof(HTTPReq));
@@ -64,9 +71,12 @@ int main(){
         .content_length = 120,
         .connection = false,
     };
+    
     mini_http_gen_resp_str(&resp, str, sizeof(str));
     printf("[ HTTP response ]\n");
     printf("%s\n", str);
 
+    HTTPResp a = mini_http_parse_resp(http_resp, NULL);
+    mini_http_print_resp(&a);
     return 0;
 }
