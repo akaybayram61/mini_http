@@ -76,6 +76,7 @@ int main(){
     printf("[ HTTP response ]\n");
     printf("%s\n", str);
 
+    printf("[ PARSED Response ]\n");
     HTTPResp a = mini_http_parse_resp(http_resp, NULL);
     mini_http_print_resp(&a);
     return 0;

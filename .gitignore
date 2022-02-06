@@ -1,6 +1,7 @@
 .vscode
 main
 src/*.o
+main.o
 test/
 Unity-master
 tcp.py
