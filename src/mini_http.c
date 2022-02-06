@@ -180,7 +180,9 @@ HTTPReq mini_http_parse_req(char *http_req, char **end_ptr){
     
     // Parse other lines
     while((line = strtok(NULL, "\r\n")) != NULL){
-        *end_ptr = line;    
+        
+        if(end_ptr != NULL)
+            *end_ptr = line;    
 
         const char *host = "Host: ";
         if(strcasestr(line, host) != NULL){
@@ -248,18 +250,95 @@ int32_t mini_http_get_status_msg(HTTPRespCode code, char *buff){
             msg = "Unknown Response";
             res = MINI_HTTP_FAIL;
             break;
-        cassert(HTTP_RESP_CODE_SIZE == 4);
     }
+    cassert(HTTP_RESP_CODE_SIZE == 4);
+
     strncpy(buff, msg, STATUS_MSG_SIZE); 
     return res;    
 }
 
 int32_t mini_http_print_resp(HTTPResp *resp){
-    //cassert(false);
+    if(resp == NULL)
+        return MINI_HTTP_FAIL;
+    printf("%s %d %s\n", HTTPVerStr[resp->version], resp->status_code, resp->status_msg);
+    
+    if(strlen(resp->content_type) != 0)
+        printf("Content-Type: %s\n", resp->content_type);
+    
+    if(strlen(resp->host) != 0)
+        printf("Host: %s\n", resp->host);
+
+    printf("Content-Length: %d\n", resp->content_length);
+    
+//    No apikey support for response
+//    if(strlen(req->apikey) != 0)
+//        printf("ApiKey: %s\n", req->apikey);
+    
+    printf("Connection: %s\n", resp->connection ? "keep-alive": "close");
+    
+    cassert(sizeof(HTTPResp) == 144);
+    return MINI_HTTP_OK;
+    return 0;
 }
 
 HTTPResp mini_http_parse_resp(char *http_resp, char **end_ptr){
-    //cassert(false);
+    HTTPResp res = {0};
+    char *line = strtok(http_resp, "\r\n");
+    
+    // make copy for further tokenizing
+    char first_line[64];
+    strncpy(first_line, line, sizeof first_line);
+    
+    // Parse other lines
+    while((line = strtok(NULL, "\r\n")) != NULL){
+        if(end_ptr != NULL)
+            *end_ptr = line;    
+
+        const char *host = "Host: ";
+        if(strcasestr(line, host) != NULL){
+            strcpy(res.host, line + strlen(host));
+            continue;
+        }
+
+        const char *content_type = "Content-Type: ";
+        if(strcasestr(line, content_type) != NULL){
+            strcpy(res.content_type, line + strlen(content_type));
+            continue;
+        }
+        
+        const char *content_length = "Content-Length: ";
+        if(strcasestr(line, content_length) != NULL){
+            res.content_length = atoi(line + strlen(content_length));
+            continue;
+        }
+
+        const char *connection = "Connection: ";
+        if(strcasestr(line, connection) != NULL){
+            if(strcasestr(line, "keep-alive"))
+                res.connection = true;
+            else
+                res.connection = false;
+            continue;
+        } 
+
+        cassert(sizeof(HTTPResp) == 144);
+    }
+
+    // Parse first line
+    char *token = strtok(first_line, " ");
+
+    if(strstr(token, "HTTP/1.0") != NULL)
+        res.version = HTTP_VER_1_0;
+    else
+        res.version = HTTP_VER_1_1;
+
+    token = strtok(NULL, " ");
+    res.status_code = atoi(token);
+    
+    token = strtok(NULL, " ");
+    strncpy(res.status_msg, token, STATUS_MSG_SIZE);
+    
+    return res;
 }
 
 int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size){
