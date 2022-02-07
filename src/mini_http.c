@@ -7,11 +7,7 @@
 #include "strutil.h"
 #include "mini_http.h"
 
-enum{
-    MINI_HTTP_BAD_ARG = -2,
-    MINI_HTTP_FAIL,
-    MINI_HTTP_OK
-};
+#define TMP_BUFF_SIZE 48
 
 enum{
     REQ_FIRST_LINE,
@@ -88,7 +84,7 @@ int32_t mini_http_print_req(HTTPReq *req){
 */
 int32_t mini_http_gen_req_str(HTTPReq *req, char *buff, int32_t buff_size){
     if(buff == NULL || buff_size <= 0)
-        return MINI_HTTP_FAIL;
+        return MINI_HTTP_BAD_ARG;
     
     char tmp_buff[128] = {0};
     
@@ -259,7 +255,7 @@ int32_t mini_http_get_status_msg(HTTPRespCode code, char *buff){
 
 int32_t mini_http_print_resp(HTTPResp *resp){
     if(resp == NULL)
-        return MINI_HTTP_FAIL;
+        return MINI_HTTP_BAD_ARG;
     printf("%s %d %s\n", HTTPVerStr[resp->version], resp->status_code, resp->status_msg);
     
     if(strlen(resp->content_type) != 0)
@@ -343,7 +339,7 @@ HTTPResp mini_http_parse_resp(char *http_resp, char **end_ptr){
 
 int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size){
     if(buff == NULL || buff_size <= 0)
-        return MINI_HTTP_FAIL;
+        return MINI_HTTP_BAD_ARG;
     
     char tmp_buff[128] = {0};
     
@@ -395,4 +391,84 @@ int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size){
     }
 
     return MINI_HTTP_OK;
+}
+
+static char *replace_char_in_str(char *str, char target, char replacement){
+    if(str == NULL)
+        return NULL;
+    
+    size_t len = strlen(str);
+    size_t i;
+    for(i = 0; i < len; ++i){
+        if(str[i] == target){
+            str[i] = replacement;
+            break;
+        }
+    }
+    
+    return (str + i + 1);
+}
+
+int32_t mini_http_parse_form_data(char *data, FormElem *buff, size_t buff_size, FormElem **end_ptr){
+    if(data == NULL || buff_size == 0 || end_ptr == NULL)
+        return MINI_HTTP_BAD_ARG;
+
+    char tmp_buff[TMP_BUFF_SIZE];
+    memset(buff, 0, buff_size * sizeof(FormElem));
+    char *pair = strtok(data, "&"); 
+
+    size_t i = 0;
+    while (pair != NULL){
+        memset(tmp_buff, 0, TMP_BUFF_SIZE);
+        strncpy(tmp_buff, pair, TMP_BUFF_SIZE);
+        
+        char *value = replace_char_in_str(tmp_buff, '=', 0);
+        strncpy(buff[i].key, tmp_buff, MAX_KEY_LEN);
+        strncpy(buff[i].value, value, MAX_VALUE_LEN);
+        
+        // restrict buffer with null terminator
+        buff[i].key[MAX_KEY_LEN - 1] = 0;
+        buff[i].value[MAX_VALUE_LEN - 1] = 0;
+        
+        i++;
+        if(i == buff_size)
+            break;
+        pair = strtok(NULL, "&");
+    }
+
+    *end_ptr = buff + i;
+
+    return MINI_HTTP_OK;
+}
+
+int32_t mini_http_gen_form_str(FormElem *data, FormElem *end_ptr, char *buff, size_t buff_len){
+    if(data == NULL || buff == NULL || end_ptr == NULL || buff_len == 0)
+        return MINI_HTTP_BAD_ARG; 
+
+    size_t curr_buff_size = 0;
+    do{
+        size_t key_len = strlen(data->key);
+        size_t val_len = strlen(data->value);
+        strncpy(buff + curr_buff_size, data->key, MAX_KEY_LEN);
+        curr_buff_size += key_len;
+        strcpy(buff + curr_buff_size, "=");
+        curr_buff_size++;
+        strncpy(buff + curr_buff_size, data->value, MAX_VALUE_LEN);
+        curr_buff_size += val_len;
+        strcpy(buff + curr_buff_size, "&");
+        curr_buff_size++;
+        if(curr_buff_size >= buff_len)
+            return MINI_HTTP_FAIL;
+    }while (data++ != end_ptr);
+
+    buff[curr_buff_size - 3] = '\0'; // '\0' terminator
+    /********************************************************************/
+    /*         +-----+-----+-----+          -1 for zero indexed array   */
+    /* buff -> | '&' | '0' |  E  |          -2 for offsets              */
+    /*         +-----+-----+-----+         +__________________________  */
+    /*                        ^             -3 length of buffer         */
+    /*                        |                                         */
+    /*                     curr_buff_size - 1                           */
+    /********************************************************************/
+    return curr_buff_size - 3;
 }

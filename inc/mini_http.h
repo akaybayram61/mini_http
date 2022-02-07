@@ -10,6 +10,15 @@
 #define HOST_NAME_SIZE 64
 #define TARGET_SIZE 32
 #define APIKEY_SIZE 32
+#define MAX_FORM_ELEMENT_LEN 16
+#define MAX_KEY_LEN 8
+#define MAX_VALUE_LEN 32
+
+enum{
+    MINI_HTTP_BAD_ARG = -2,
+    MINI_HTTP_FAIL,
+    MINI_HTTP_OK
+};
 
 typedef enum{
     HTTP_REQ_GET,
@@ -52,6 +61,11 @@ typedef struct HTTPReq{
     bool connection;
 }HTTPReq;
 
+typedef struct FormElem{
+    char key[MAX_KEY_LEN];
+    char value[MAX_VALUE_LEN];
+}FormElem;
+
 int32_t mini_http_print_req(HTTPReq *req);
 int32_t mini_http_gen_req_str(HTTPReq *req, char *buff, int32_t buff_size);
 HTTPReq mini_http_parse_req(char *http_req, char **end_ptr);
@@ -59,4 +73,6 @@ int32_t mini_http_get_resp_msg(HTTPRespCode code, char *buff);
 int32_t mini_http_print_resp(HTTPResp *resp);
 HTTPResp mini_http_parse_resp(char *http_resp, char **end_ptr);
 int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size);
+int32_t mini_http_parse_form_data(char *data, FormElem *buff, size_t buff_size, FormElem **end_ptr);
+int32_t mini_http_gen_form_str(FormElem *data, FormElem *end_ptr, char *buff, size_t buff_len);
 #endif // _MINI_HTTP_
