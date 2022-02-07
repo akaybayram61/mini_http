@@ -37,7 +37,7 @@ Sec-Fetch-Dest: document\r\n\
 Accept-Encoding: gzip, deflate, br\r\n\
 Accept-Language: en-US,en;q=0.9\
 \r\n\r\n\
-fname=bayram&lname=akay";
+fname=bayram&lname=akay&deneme=123&iottrialadsa=birnumara";
 
 char http_resp[] = "HTTP/1.1 200 OK\r\n\
 Date: Tue, 27 Jul 2009 12:28:53 GMT\r\n\
@@ -51,17 +51,37 @@ int main(){
     printf("HTTPReq %ld\n", sizeof(HTTPReq));
     printf("HTTPResp %ld\n", sizeof(HTTPResp));
     char str[256] = {0};
-    char *end_ptr;
-    HTTPReq req = mini_http_parse_req(http_header, &end_ptr);
+    char *data = 0;
+    HTTPReq req = mini_http_parse_req(http_form_header, &data);
     printf("[ HTTP header ]\n");
     mini_http_print_req(&req);
     printf("[ HTTP body ]\n");
-    printf("%s\n", end_ptr);  
-    int status = mini_http_gen_req_str(&req, str, sizeof str);
-    if(status == 0)
-        printf("%s\n", str);
+    if(data != NULL)
+        printf("%s\n", data);
+
+    FormElem buff[10];
+    FormElem *end_ptr = 0;
+    if(mini_http_parse_form_data(data, buff, sizeof buff / sizeof(FormElem), &end_ptr) == MINI_HTTP_OK){
+        printf("=== Form Data ===\n");
+        int i = 0;
+        
+        do{
+            printf("%d) Key: \"%s\" -->> Value: \"%s\"\n", 
+                    i, 
+                    buff[i].key, 
+                    buff[i].value);
+            i++;
+        } while(buff + i != end_ptr);
+        printf("======================\n");
+    }
+    char empty_buffer[128] = {0};
+    int res = mini_http_gen_form_str(buff, end_ptr, empty_buffer, sizeof empty_buffer);
+    if(res == MINI_HTTP_FAIL){
+        printf("Gen str failed! : FAIL\n");
+    }else if (res == MINI_HTTP_BAD_ARG)
+        printf("Gen str failed! : BAD_ARG\n");
     else
-        printf("Error\n");
+        printf("Empty buffer = %s\n", empty_buffer);
     
     HTTPResp resp = {
         .status_code = 200,
