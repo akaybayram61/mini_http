@@ -101,7 +101,7 @@ int32_t mini_http_gen_req_str(HTTPReq *req, char *buff, int32_t buff_size){
                 break;
                 
             case HOST:
-                if(req->host == NULL)
+                if(strlen(req->host) == 0)
                     break;
                 sprintf(tmp_buff, http_header_temp[HOST],
                 req->host);
@@ -113,14 +113,14 @@ int32_t mini_http_gen_req_str(HTTPReq *req, char *buff, int32_t buff_size){
                 break;
             
             case CONTENT_TYPE:
-                if(req->content_type == NULL)
+                if(strlen(req->content_type) == 0)
                     break;
                 sprintf(tmp_buff, http_header_temp[CONTENT_TYPE],
                 req->content_type);
                 break;
             
             case APIKEY:
-                if(req->apikey == NULL)
+                if(strlen(req->apikey) == 0)
                     break; 
                 sprintf(tmp_buff, http_header_temp[APIKEY],
                 req->apikey);
@@ -357,7 +357,7 @@ int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size){
                 break;
                 
             case HOST:
-                if(resp->host == NULL)
+                if(strlen(resp->host) == 0)
                     break;
                 sprintf(tmp_buff, http_header_temp[HOST],
                 resp->host);
@@ -369,7 +369,7 @@ int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size){
                 break;
             
             case CONTENT_TYPE:
-                if(resp->content_type == NULL)
+                if(strlen(resp->content_type) == 0)
                     break;
                 sprintf(tmp_buff, http_header_temp[CONTENT_TYPE],
                 resp->content_type);
