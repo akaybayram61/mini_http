@@ -25,7 +25,7 @@ static char *http_header_temp[] = {
     [REQ_FIRST_LINE] = "%s %s %s\r\n",
     [RESP_FIRST_LINE] = "%s %d %s\r\n", 
     [HOST] = "Host: %s\r\n",
-    [CONTENT_TYPE] = "Content-Type: %s\r\n",
+    [CONTENT_TYPE] = "Content-Type: %s; charset=utf-8\r\n",
     [CONTENT_LENGTH] = "Content-Length: %d\r\n",
     [APIKEY] = "ApiKey: %s\r\n", 
     [CONNECTION] = "Connection: %s\r\n",
@@ -126,7 +126,7 @@ int32_t mini_http_gen_req_str(HTTPReq *req, char *buff, int32_t buff_size){
                 req->apikey);
                 break;
             case CONNECTION:
-                sprintf(tmp_buff, req->connection ? "Connection: keep-alive": "Connection: close");
+                sprintf(tmp_buff, req->connection ? "Connection: keep-alive\r\n": "Connection: close\r\n");
                 break;
 
             cassert(sizeof(HTTPReq) == 176);
@@ -376,7 +376,7 @@ int32_t mini_http_gen_resp_str(HTTPResp *resp, char *buff, int32_t buff_size){
                 break;
             
             case CONNECTION:
-                sprintf(tmp_buff, resp->connection ? "Connection: keep-alive": "Connection: close");
+                sprintf(tmp_buff, resp->connection ? "Connection: keep-alive\r\n": "Connection: close\r\n");
                 break;
 
             cassert(sizeof(HTTPResp) == 144);
