@@ -9,3 +9,5 @@ Unity-master.zip
 GPATH
 GRTAGS
 GTAGS
+compile_commands.json
+.cache
